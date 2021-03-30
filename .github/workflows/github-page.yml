@@ -92,7 +92,7 @@ jobs:
 
     - name: deploy to gh-pages 🚀
       run: |
-        git config --local user.email "marcin.szamotulski@iohk.io"
+        git config --local user.email "operations@iohk.io"
         git config --local user.name ${{ github.actor }}
         git fetch origin gh-pages:gh-pages
         git checkout gh-pages
