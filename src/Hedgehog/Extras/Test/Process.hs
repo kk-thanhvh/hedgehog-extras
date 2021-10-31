@@ -43,7 +43,7 @@ import           Prelude (error)
 import           System.Exit (ExitCode)
 import           System.FilePath.Posix ((</>))
 import           System.IO (FilePath, Handle)
-import           System.Process (CmdSpec (..), CreateProcess (..), Pid, ProcessHandle)
+import           System.Process (CmdSpec (..), CreateProcess (..), Pid, ProcessHandle, StdStream (..))
 import           Text.Show
 
 import qualified Data.ByteString.Lazy as LBS
@@ -64,12 +64,18 @@ import qualified System.Process as IO
 data ExecConfig = ExecConfig
   { execConfigEnv :: Last [(String, String)]
   , execConfigCwd :: Last FilePath
+  , execConfigStdout :: StdStream
+  , execConfigStderr :: StdStream
+  , execConfigStdin :: StdStream
   } deriving (Eq, Show)
 
 defaultExecConfig :: ExecConfig
 defaultExecConfig = ExecConfig
   { execConfigEnv = mempty
   , execConfigCwd = mempty
+  , execConfigStdout = Inherit
+  , execConfigStderr = Inherit
+  , execConfigStdin = Inherit
   }
 
 -- | Discover the location of the plan.json file.
@@ -175,6 +181,9 @@ exec execConfig bin arguments = GHC.withFrozenCallStack $ do
   let cp = (IO.proc bin arguments)
         { IO.env = getLast $ execConfigEnv execConfig
         , IO.cwd = getLast $ execConfigCwd execConfig
+        , IO.std_in = execConfigStdin execConfig
+        , IO.std_out = execConfigStdout execConfig
+        , IO.std_err = execConfigStderr execConfig
         }
   H.annotate . ("Command: " <>) $ bin <> " " <> L.unwords arguments
   (exitResult, stdout, stderr) <- H.evalIO $ IO.readCreateProcessWithExitCode cp ""
@@ -302,6 +311,9 @@ procFlex' execConfig pkg binaryEnv arguments = GHC.withFrozenCallStack . H.evalM
   return (IO.proc bin arguments)
     { IO.env = getLast $ execConfigEnv execConfig
     , IO.cwd = getLast $ execConfigCwd execConfig
+    , IO.std_in = execConfigStdin execConfig
+    , IO.std_out = execConfigStdout execConfig
+    , IO.std_err = execConfigStderr execConfig
     }
 
 -- | Compute the project base.  This will be based on either the "CARDANO_NODE_SRC"
