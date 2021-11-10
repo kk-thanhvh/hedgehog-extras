@@ -77,7 +77,7 @@ planJsonFile :: String
 planJsonFile = IO.unsafePerformIO $ do
   maybeBuildDir <- liftIO $ IO.lookupEnv "CABAL_BUILDDIR"
   case maybeBuildDir of
-    Just buildDir -> return $ ".." </> buildDir </> "cache/plan.json"
+    Just buildDir -> return $ buildDir </> "cache/plan.json"
     Nothing -> return "../dist-newstyle/cache/plan.json"
 {-# NOINLINE planJsonFile #-}
 
